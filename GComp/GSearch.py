@@ -20,7 +20,6 @@ class GSearch:
         self.url= '' 
         self.title = '' 
         self.snippet = '' 
-        self.logger.info("GSearch Initialization Completed.")
 
     def get_URL(self):
         return self.url

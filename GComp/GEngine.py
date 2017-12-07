@@ -26,14 +26,14 @@ from . import GSearch
 
 class GEngine:
     """docstring for GEngine"""
-    def __init__(self, logger, google_mirror, results_num , lang ):
+    def __init__(self, logger, google_mirror, results_num , lang, agent_list ):
         self.logger = logger
         self.results_num = results_num
         self.google_mirror = google_mirror
+        self.agent_list = agent_list
         self.lang = lang
 
-        self.user_agent = "Safari/533.4"
-        self.logger.info("Set default user agent: %s"%self.user_agent)
+        self.user_agent = self.__get_agent_list()
 
         timeout = 40
         socket.setdefaulttimeout(timeout)
@@ -50,6 +50,16 @@ class GEngine:
         if(url_match and url_match.lastindex > 0):
             url = url_match.group(1)
         return url 
+
+    def __get_agent_list(self):
+        agents = []
+        self.logger.info("load agent list: %s"%self.agent_list)
+        with open(self.agent_list, 'r', encoding='utf-8') as fi:
+            for line in fi:
+                line = line.strip()
+                if line != "":
+                    agents.append(line)
+        return agents
 
     def __get_search_results(self, html):
         results = []
@@ -84,26 +94,34 @@ class GEngine:
                     results.append(result)
         return results
 
-    def search(self, query):
+    def search(self, query, show_dup = False):
         lang = self.lang
         num = self.results_num
+        num_per_page = 10
         base_url = self.google_mirror
         search_results = []
+        index_range = len(self.user_agent)
         query = urllib.request.quote(query)
         if(num % self.results_num == 0):
-            pages = int(num / self.results_num)
+            pages = int(num / num_per_page)
         else:
-            pages = int(num / self.results_num) + 1
-
-        for p in range(0, pages):
-            start = p * num
-            url = 'https://%s/search?hl=%s&num=%d&start=%s&q=%s' % (base_url, lang, num, start, query)
+            pages = int(num / num_per_page) + 1
+        if show_dup:
+            dup = 0
+        else:
+            dup = 1
+        self.logger.info("Total Fectching: %d Pages/ %d Results "%(pages, num))
+        for p in range(0, max(1, pages)):
+            self.logger.info("Fectching %d/%d"%(p+1, pages))
+            start = p * num_per_page
+            url = 'https://%s/search?hl=%s&fitler=%d&num=%d&start=%s&q=%s' % (base_url, lang, dup, num_per_page, start, query)
             retry = 3
             while(retry > 0):
                 try:
                     request = urllib.request.Request(url)
-                    user_agent = self.user_agent
-                    request.add_header('User-agent', user_agent)
+                    agent_index = random.randint(0, index_range - 1)
+                    user_agent = self.user_agent[agent_index]
+                    request.add_header('User-Agent', user_agent)
                     request.add_header('connection','keep-alive')
                     request.add_header('Accept-Encoding', 'gzip')
                     request.add_header('referer', base_url)
@@ -117,7 +135,7 @@ class GEngine:
                     search_results.extend(results)
                     break;
                 except urllib.error.URLError as e:
-                    print ('url error:'+ e)
+                    self.logger.error(e)
                     self.__gsleep()
                     retry = retry - 1
                     continue            
@@ -126,4 +144,5 @@ class GEngine:
                     retry = retry - 1
                     self.__gsleep()
                     continue
+            
         return search_results 
