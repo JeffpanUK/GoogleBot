@@ -14,3 +14,7 @@ The output will be saved into a file named "results" in working directory.
 -n/--num	number of results shows, default = 20
 
 -l/--lang		searching language, default=zh-cn
+
+-r/--results    searching result file, default=results.txt
+
+-d/--dup      show weak-relevant/similar/duplicated results according to Google, default=0, (False)
