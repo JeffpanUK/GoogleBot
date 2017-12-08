@@ -55,7 +55,7 @@ if __name__ == '__main__':
   parser.add_argument("-l", "--lang", action="store", dest="lang", default='en', help='language for each search')
   parser.add_argument("-a", "--agent", action="store", dest="agent", default=r'agent.list', help='agent list to obey Google Rules')
   parser.add_argument("-d", "--dup", action="store", dest="show_dup", type = int, default=0, help='Whether show duplicated results')
-  parser.add_argument("-r", "--results", action="store", dest="results", type = int, default='results.txt', help='searching results')
+  parser.add_argument("-r", "--results", action="store", dest="results", type = str, default='results.txt', help='searching results')
   parser.add_argument(type=str, action="store", dest="target", default="", help='company name list')
 
   args = parser.parse_args()
